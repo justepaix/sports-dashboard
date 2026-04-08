@@ -8,7 +8,6 @@ const headers = {
   "x-apisports-key": API_KEY,
 };
 
-// Fetch live matches from API and store in DB
 const getLiveMatches = async (req, res) => {
   try {
     const response = await axios.get(`${BASE_URL}/fixtures?live=all`, {
@@ -20,7 +19,6 @@ const getLiveMatches = async (req, res) => {
       return res.json({ message: "No live matches right now", data: [] });
     }
 
-    // Store each match in DB
     for (const fixture of fixtures) {
       const { id, status, date } = fixture.fixture;
       const league = fixture.league.name;
@@ -28,7 +26,6 @@ const getLiveMatches = async (req, res) => {
       const awayTeam = fixture.teams.away;
       const goals = fixture.goals;
 
-      // Upsert home team
       await pool.query(
         `INSERT INTO teams (api_id, name, logo, sport, league)
          VALUES ($1, $2, $3, 'soccer', $4)
@@ -36,7 +33,6 @@ const getLiveMatches = async (req, res) => {
         [homeTeam.id, homeTeam.name, homeTeam.logo, league],
       );
 
-      // Upsert away team
       await pool.query(
         `INSERT INTO teams (api_id, name, logo, sport, league)
          VALUES ($1, $2, $3, 'soccer', $4)
@@ -44,7 +40,6 @@ const getLiveMatches = async (req, res) => {
         [awayTeam.id, awayTeam.name, awayTeam.logo, league],
       );
 
-      // Get team IDs from DB
       const homeResult = await pool.query(
         "SELECT id FROM teams WHERE api_id = $1",
         [homeTeam.id],
@@ -54,7 +49,6 @@ const getLiveMatches = async (req, res) => {
         [awayTeam.id],
       );
 
-      // Upsert match
       await pool.query(
         `INSERT INTO matches (api_id, sport, league, home_team_id, away_team_id, home_score, away_score, status, match_date)
          VALUES ($1, 'soccer', $2, $3, $4, $5, $6, $7, $8)
@@ -75,7 +69,6 @@ const getLiveMatches = async (req, res) => {
       );
     }
 
-    // Return matches from our DB
     const matches = await pool.query(`
       SELECT m.*, 
         ht.name as home_team, ht.logo as home_logo,
@@ -83,7 +76,7 @@ const getLiveMatches = async (req, res) => {
       FROM matches m
       JOIN teams ht ON m.home_team_id = ht.id
       JOIN teams at ON m.away_team_id = at.id
-      WHERE m.sport = 'soccer' AND m.status != 'FT'
+      WHERE m.sport = 'soccer'
       ORDER BY m.match_date DESC
     `);
 
@@ -94,7 +87,26 @@ const getLiveMatches = async (req, res) => {
   }
 };
 
-// Get last 5 games average for a team
+const getStoredMatches = async (req, res) => {
+  try {
+    const matches = await pool.query(`
+      SELECT m.*, 
+        ht.name as home_team, ht.logo as home_logo,
+        at.name as away_team, at.logo as away_logo
+      FROM matches m
+      JOIN teams ht ON m.home_team_id = ht.id
+      JOIN teams at ON m.away_team_id = at.id
+      WHERE m.sport = 'soccer'
+      ORDER BY m.match_date DESC
+    `);
+
+    res.json({ data: matches.rows });
+  } catch (error) {
+    console.error("DB fetch error:", error.message);
+    res.status(500).json({ error: "Failed to fetch matches" });
+  }
+};
+
 const getTeamAverages = async (req, res) => {
   try {
     const { teamId } = req.params;
@@ -124,4 +136,4 @@ const getTeamAverages = async (req, res) => {
   }
 };
 
-module.exports = { getLiveMatches, getTeamAverages };
+module.exports = { getLiveMatches, getStoredMatches, getTeamAverages };
