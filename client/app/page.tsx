@@ -22,6 +22,7 @@ export default function Home() {
     SoccerAverages | NBAaverages | null
   >(null);
   const [loading, setLoading] = useState(false);
+  const [statsLoading, setStatsLoading] = useState(false);
 
   useEffect(() => {
     fetchMatches();
@@ -45,6 +46,9 @@ export default function Home() {
 
   const handleMatchClick = async (match: Match) => {
     setSelectedMatch(match);
+    setStatsLoading(true);
+    setHomeAverages(null);
+    setAwayAverages(null);
     try {
       if (sport === "soccer") {
         const [home, away] = await Promise.all([
@@ -63,51 +67,144 @@ export default function Home() {
       }
     } catch (err) {
       console.error(err);
+    } finally {
+      setStatsLoading(false);
     }
   };
 
   return (
-    <main className="min-h-screen p-6 max-w-6xl mx-auto">
+    <main
+      style={{
+        minHeight: "100vh",
+        padding: "32px 40px",
+        maxWidth: "1200px",
+        margin: "0 auto",
+      }}
+    >
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-blue-400">⚡ SportsPulse</h1>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setSport("soccer")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              sport === "soccer"
-                ? "bg-blue-500 text-white"
-                : "text-gray-400 hover:text-white"
-            }`}
-            style={sport !== "soccer" ? { backgroundColor: "var(--card)" } : {}}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: "40px",
+        }}
+      >
+        <div>
+          <h1
+            className="font-display"
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "36px",
+              fontWeight: 800,
+              letterSpacing: "0.04em",
+              textTransform: "uppercase",
+              background: "linear-gradient(135deg, #fff 30%, var(--accent))",
+              WebkitBackgroundClip: "text",
+              WebkitTextFillColor: "transparent",
+            }}
           >
-            ⚽ Soccer
-          </button>
-          <button
-            onClick={() => setSport("nba")}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              sport === "nba"
-                ? "bg-blue-500 text-white"
-                : "text-gray-400 hover:text-white"
-            }`}
-            style={sport !== "nba" ? { backgroundColor: "var(--card)" } : {}}
+            ⚡ SportsPulse
+          </h1>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "var(--muted-bright)",
+              marginTop: "2px",
+            }}
           >
-            🏀 NBA
-          </button>
+            Live scores · Team analytics
+          </p>
+        </div>
+
+        {/* Sport Toggle */}
+        <div
+          style={{
+            display: "flex",
+            gap: "4px",
+            backgroundColor: "var(--card)",
+            border: "1px solid var(--border)",
+            borderRadius: "10px",
+            padding: "4px",
+          }}
+        >
+          {(["soccer", "nba"] as const).map((s) => (
+            <button
+              key={s}
+              onClick={() => setSport(s)}
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "14px",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                padding: "8px 20px",
+                borderRadius: "7px",
+                border: "none",
+                cursor: "pointer",
+                transition: "all 0.2s ease",
+                backgroundColor: sport === s ? "var(--accent)" : "transparent",
+                color: sport === s ? "#fff" : "var(--muted-bright)",
+                boxShadow:
+                  sport === s ? "0 2px 12px var(--accent-glow)" : "none",
+              }}
+            >
+              {s === "soccer" ? "⚽ Soccer" : "🏀 NBA"}
+            </button>
+          ))}
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Matches List */}
+      {/* Main Grid */}
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: "24px",
+          alignItems: "start",
+        }}
+      >
+        {/* Matches Column */}
         <div>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold text-lg">
-              {sport === "soccer" ? "⚽ Live Matches" : "🏀 Today's Games"}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "16px",
+            }}
+          >
+            <h2
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "20px",
+                fontWeight: 700,
+                letterSpacing: "0.06em",
+                textTransform: "uppercase",
+                color: "var(--muted-bright)",
+              }}
+            >
+              {sport === "soccer" ? "⚽ Matches" : "🏀 Games"}
             </h2>
             <button
               onClick={fetchMatches}
-              className="text-xs px-3 py-1 rounded-lg hover:text-white transition-all"
-              style={{ backgroundColor: "var(--card)", color: "var(--muted)" }}
+              style={{
+                fontSize: "12px",
+                padding: "6px 14px",
+                backgroundColor: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "6px",
+                color: "var(--muted-bright)",
+                cursor: "pointer",
+                fontFamily: "var(--font-body)",
+                transition: "all 0.2s",
+              }}
+              onMouseEnter={(e) =>
+                (e.currentTarget.style.borderColor = "var(--border-bright)")
+              }
+              onMouseLeave={(e) =>
+                (e.currentTarget.style.borderColor = "var(--border)")
+              }
             >
               ↻ Refresh
             </button>
@@ -115,58 +212,131 @@ export default function Home() {
 
           {loading ? (
             <div
-              className="text-center py-12"
-              style={{ color: "var(--muted)" }}
+              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
             >
-              Loading matches...
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    height: "90px",
+                    borderRadius: "12px",
+                    backgroundColor: "var(--card)",
+                    border: "1px solid var(--border)",
+                    animation: "pulse-live 1.5s ease-in-out infinite",
+                    opacity: 0.5,
+                  }}
+                />
+              ))}
             </div>
           ) : matches.length === 0 ? (
             <div
-              className="text-center py-12"
-              style={{ color: "var(--muted)" }}
+              style={{
+                padding: "48px 24px",
+                textAlign: "center",
+                backgroundColor: "var(--card)",
+                border: "1px solid var(--border)",
+                borderRadius: "12px",
+                color: "var(--muted)",
+              }}
             >
-              No matches right now
+              <div style={{ fontSize: "32px", marginBottom: "12px" }}>🏟️</div>
+              <div
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "16px",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                No matches right now
+              </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
-              {matches.map((match) => (
-                <MatchCard
-                  key={match.id}
-                  match={match}
-                  onClick={handleMatchClick}
-                />
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+            >
+              {matches.map((match, i) => (
+                <div key={match.id} style={{ animationDelay: `${i * 0.05}s` }}>
+                  <MatchCard
+                    match={match}
+                    onClick={handleMatchClick}
+                    isSelected={selectedMatch?.id === match.id}
+                  />
+                </div>
               ))}
             </div>
           )}
         </div>
 
-        {/* Stats Panel */}
+        {/* Stats Column */}
         <div>
-          <h2 className="font-semibold text-lg mb-4">
-            📊 Last 5 Games Averages
+          <h2
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "20px",
+              fontWeight: 700,
+              letterSpacing: "0.06em",
+              textTransform: "uppercase",
+              color: "var(--muted-bright)",
+              marginBottom: "16px",
+            }}
+          >
+            📊 Team Analytics
           </h2>
+
           {!selectedMatch ? (
             <div
-              className="rounded-xl p-8 border text-center"
               style={{
+                padding: "48px 24px",
+                textAlign: "center",
                 backgroundColor: "var(--card)",
-                borderColor: "var(--border)",
+                border: "1px solid var(--border)",
+                borderRadius: "12px",
                 color: "var(--muted)",
               }}
             >
-              Click a match to see team averages
+              <div style={{ fontSize: "32px", marginBottom: "12px" }}>👆</div>
+              <div
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "16px",
+                  letterSpacing: "0.05em",
+                }}
+              >
+                Select a match to view team analytics
+              </div>
+            </div>
+          ) : statsLoading ? (
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+            >
+              {[1, 2].map((i) => (
+                <div
+                  key={i}
+                  style={{
+                    height: "200px",
+                    borderRadius: "12px",
+                    backgroundColor: "var(--card)",
+                    border: "1px solid var(--border)",
+                    opacity: 0.5,
+                  }}
+                />
+              ))}
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
+            <div
+              style={{ display: "flex", flexDirection: "column", gap: "12px" }}
+            >
               <StatsPanel
                 sport={sport}
                 teamName={selectedMatch.home_team}
                 averages={homeAverages}
+                logo={selectedMatch.home_logo}
               />
               <StatsPanel
                 sport={sport}
                 teamName={selectedMatch.away_team}
                 averages={awayAverages}
+                logo={selectedMatch.away_logo}
               />
             </div>
           )}

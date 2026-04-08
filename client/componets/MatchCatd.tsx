@@ -5,71 +5,201 @@ import { Match } from "@/lib/types";
 interface Props {
   match: Match;
   onClick: (match: Match) => void;
+  isSelected?: boolean;
 }
 
-export default function MatchCard({ match, onClick }: Props) {
+export default function MatchCard({ match, onClick, isSelected }: Props) {
   const isLive = !match.status.includes("2026") && match.status !== "FT";
+
+  const getTime = () => {
+    if (isLive) return match.status;
+    try {
+      return new Date(match.status).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch {
+      return match.status;
+    }
+  };
 
   return (
     <div
       onClick={() => onClick(match)}
-      className="cursor-pointer rounded-xl p-4 border transition-all hover:border-blue-500"
-      style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}
+      className="animate-slide-up"
+      style={{
+        backgroundColor: isSelected ? "var(--card-hover)" : "var(--card)",
+        border: `1px solid ${isSelected ? "var(--accent)" : "var(--border)"}`,
+        borderRadius: "12px",
+        padding: "16px 20px",
+        cursor: "pointer",
+        transition: "all 0.2s ease",
+        boxShadow: isSelected
+          ? "0 0 0 1px var(--accent), 0 4px 24px var(--accent-glow)"
+          : "none",
+      }}
+      onMouseEnter={(e) => {
+        if (!isSelected)
+          (e.currentTarget as HTMLElement).style.borderColor =
+            "var(--border-bright)";
+      }}
+      onMouseLeave={(e) => {
+        if (!isSelected)
+          (e.currentTarget as HTMLElement).style.borderColor = "var(--border)";
+      }}
     >
-      {/* League + Status */}
-      <div className="flex justify-between items-center mb-3">
-        <span className="text-xs" style={{ color: "var(--muted)" }}>
+      {/* Top row */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: "14px",
+        }}
+      >
+        <span
+          style={{
+            fontFamily: "var(--font-display)",
+            fontSize: "11px",
+            fontWeight: 600,
+            letterSpacing: "0.1em",
+            color: "var(--muted-bright)",
+            textTransform: "uppercase",
+          }}
+        >
           {match.league}
         </span>
+
         {isLive ? (
-          <span className="text-xs font-bold text-red-500 animate-pulse">
-            ● LIVE {match.status}
-          </span>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+            <span
+              className="animate-pulse-live"
+              style={{
+                width: "6px",
+                height: "6px",
+                borderRadius: "50%",
+                backgroundColor: "var(--live)",
+                display: "inline-block",
+              }}
+            />
+            <span
+              style={{
+                fontFamily: "var(--font-display)",
+                fontSize: "12px",
+                fontWeight: 700,
+                color: "var(--live)",
+                letterSpacing: "0.05em",
+              }}
+            >
+              LIVE {match.status}
+            </span>
+          </div>
         ) : (
-          <span className="text-xs" style={{ color: "var(--muted)" }}>
-            {new Date(match.status).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
+          <span
+            style={{
+              fontSize: "12px",
+              color: "var(--muted)",
+              fontVariantNumeric: "tabular-nums",
+            }}
+          >
+            {getTime()}
           </span>
         )}
       </div>
 
       {/* Teams + Score */}
-      <div className="flex items-center justify-between gap-2">
+      <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
         {/* Home */}
-        <div className="flex flex-col items-center gap-1 flex-1">
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+          }}
+        >
           {match.home_logo && (
             <img
               src={match.home_logo}
-              alt={match.home_team}
-              className="w-8 h-8 object-contain"
+              alt=""
+              style={{ width: "28px", height: "28px", objectFit: "contain" }}
             />
           )}
-          <span className="text-sm font-medium text-center">
+          <span
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "17px",
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+            }}
+          >
             {match.home_team}
           </span>
         </div>
 
         {/* Score */}
-        <div className="flex items-center gap-2 px-3">
-          <span className="text-2xl font-bold">{match.home_score ?? "-"}</span>
-          <span style={{ color: "var(--muted)" }}>:</span>
-          <span className="text-2xl font-bold">{match.away_score ?? "-"}</span>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            backgroundColor: "var(--surface)",
+            borderRadius: "8px",
+            padding: "6px 14px",
+            border: "1px solid var(--border)",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "22px",
+              fontWeight: 800,
+              letterSpacing: "0.02em",
+            }}
+          >
+            {match.home_score ?? "-"}
+          </span>
+          <span style={{ color: "var(--muted)", fontSize: "14px" }}>–</span>
+          <span
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "22px",
+              fontWeight: 800,
+              letterSpacing: "0.02em",
+            }}
+          >
+            {match.away_score ?? "-"}
+          </span>
         </div>
 
         {/* Away */}
-        <div className="flex flex-col items-center gap-1 flex-1">
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            justifyContent: "flex-end",
+          }}
+        >
+          <span
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "17px",
+              fontWeight: 700,
+              letterSpacing: "0.02em",
+              textAlign: "right",
+            }}
+          >
+            {match.away_team}
+          </span>
           {match.away_logo && (
             <img
               src={match.away_logo}
-              alt={match.away_team}
-              className="w-8 h-8 object-contain"
+              alt=""
+              style={{ width: "28px", height: "28px", objectFit: "contain" }}
             />
           )}
-          <span className="text-sm font-medium text-center">
-            {match.away_team}
-          </span>
         </div>
       </div>
     </div>

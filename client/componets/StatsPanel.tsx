@@ -6,88 +6,187 @@ interface Props {
   sport: "soccer" | "nba";
   teamName: string;
   averages: SoccerAverages | NBAaverages | null;
+  logo?: string;
 }
 
-export default function StatsPanel({ sport, teamName, averages }: Props) {
-  if (!averages)
-    return (
-      <div className="text-center py-8" style={{ color: "var(--muted)" }}>
-        No stats available yet
-      </div>
-    );
-
-  const stats =
-    sport === "soccer"
+export default function StatsPanel({ sport, teamName, averages, logo }: Props) {
+  const stats = !averages
+    ? []
+    : sport === "soccer"
       ? [
-          { label: "Avg Goals", value: (averages as SoccerAverages).avg_goals },
           {
-            label: "Avg Corners",
+            label: "Goals",
+            value: (averages as SoccerAverages).avg_goals,
+            unit: "",
+          },
+          {
+            label: "Corners",
             value: (averages as SoccerAverages).avg_corners,
+            unit: "",
           },
           {
-            label: "Avg Yellow Cards",
+            label: "Yellow Cards",
             value: (averages as SoccerAverages).avg_yellow_cards,
+            unit: "",
           },
           {
-            label: "Avg Red Cards",
+            label: "Red Cards",
             value: (averages as SoccerAverages).avg_red_cards,
+            unit: "",
           },
           {
-            label: "Avg Possession %",
+            label: "Possession",
             value: (averages as SoccerAverages).avg_possession,
+            unit: "%",
           },
           {
-            label: "Avg Shots on Target",
+            label: "Shots on Target",
             value: (averages as SoccerAverages).avg_shots_on_target,
+            unit: "",
           },
         ]
       : [
-          { label: "Avg Points", value: (averages as NBAaverages).avg_points },
           {
-            label: "Avg Rebounds",
+            label: "Points",
+            value: (averages as NBAaverages).avg_points,
+            unit: "",
+          },
+          {
+            label: "Rebounds",
             value: (averages as NBAaverages).avg_rebounds,
+            unit: "",
           },
           {
-            label: "Avg Assists",
+            label: "Assists",
             value: (averages as NBAaverages).avg_assists,
+            unit: "",
           },
           {
-            label: "Avg FG %",
+            label: "FG%",
             value: (averages as NBAaverages).avg_fg_percentage,
+            unit: "%",
           },
           {
-            label: "Avg 3PT %",
+            label: "3PT%",
             value: (averages as NBAaverages).avg_three_point_percentage,
+            unit: "%",
           },
           {
-            label: "Avg Turnovers",
+            label: "Turnovers",
             value: (averages as NBAaverages).avg_turnovers,
+            unit: "",
           },
         ];
 
   return (
     <div
-      className="rounded-xl p-4 border"
-      style={{ backgroundColor: "var(--card)", borderColor: "var(--border)" }}
+      className="animate-fade-in"
+      style={{
+        backgroundColor: "var(--card)",
+        border: "1px solid var(--border)",
+        borderRadius: "12px",
+        overflow: "hidden",
+      }}
     >
-      <h3 className="font-bold mb-4 text-blue-400">
-        {teamName} — Last 5 Games
-      </h3>
-      <div className="grid grid-cols-2 gap-3">
-        {stats.map((stat) => (
+      {/* Team Header */}
+      <div
+        style={{
+          padding: "14px 20px",
+          borderBottom: "1px solid var(--border)",
+          display: "flex",
+          alignItems: "center",
+          gap: "12px",
+          background: "linear-gradient(135deg, var(--card-hover), var(--card))",
+        }}
+      >
+        {logo && (
+          <img
+            src={logo}
+            alt=""
+            style={{ width: "32px", height: "32px", objectFit: "contain" }}
+          />
+        )}
+        <div>
           <div
-            key={stat.label}
-            className="rounded-lg p-3"
-            style={{ backgroundColor: "var(--background)" }}
+            style={{
+              fontFamily: "var(--font-display)",
+              fontSize: "18px",
+              fontWeight: 700,
+              letterSpacing: "0.03em",
+            }}
           >
-            <div className="text-xs mb-1" style={{ color: "var(--muted)" }}>
-              {stat.label}
-            </div>
-            <div className="text-xl font-bold text-blue-400">
-              {stat.value ?? "N/A"}
-            </div>
+            {teamName}
           </div>
-        ))}
+          <div
+            style={{
+              fontSize: "11px",
+              color: "var(--muted-bright)",
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+            }}
+          >
+            Last 5 Games Average
+          </div>
+        </div>
+      </div>
+
+      {/* Stats Grid */}
+      <div
+        style={{
+          padding: "16px",
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: "10px",
+        }}
+      >
+        {!averages ? (
+          <div
+            style={{
+              gridColumn: "span 3",
+              textAlign: "center",
+              padding: "24px",
+              color: "var(--muted)",
+            }}
+          >
+            No stats available yet
+          </div>
+        ) : (
+          stats.map((stat) => (
+            <div
+              key={stat.label}
+              style={{
+                backgroundColor: "var(--surface)",
+                borderRadius: "8px",
+                padding: "12px",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "var(--muted-bright)",
+                  marginBottom: "6px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.06em",
+                }}
+              >
+                {stat.label}
+              </div>
+              <div
+                style={{
+                  fontFamily: "var(--font-display)",
+                  fontSize: "26px",
+                  fontWeight: 800,
+                  color: "var(--accent)",
+                  lineHeight: 1,
+                }}
+              >
+                {stat.value ?? "—"}
+                {stat.value ? stat.unit : ""}
+              </div>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
